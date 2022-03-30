@@ -11,8 +11,8 @@ import { Contract, Provider, setMulticallAddress } from 'ethers-multicall'
 		// const url = "https://api.bscscan.com/api?module=account&action=txlist&address=" + contractAddress + "&startblock=0&endblock=99999999&page=1&offset=10&sort=asc&apikey=" + apiKey
 		// console.log(url)
 		let start = 15372122
-		// let last = 16502296
-		let last = start + 5000
+		let last = 16502296
+		// let last = start + 5000
 		let count = last - start
 		const provider = new ethers.providers.JsonRpcProvider(rpcKey)
 		const contract = new ethers.Contract(contractAddress, abi, provider)
@@ -25,7 +25,7 @@ import { Contract, Provider, setMulticallAddress } from 'ethers-multicall'
 		for (let k = start; k < last; k+=limit) {
 			
 			let events = await contract.queryFilter(eventFilter, k, k + limit)
-			console.log(`#${k} - ${(k + 5000 - start)}/${count} - ${ Math.round((k + 5000 - start) * 10000 / count )/100 }% ${events.length} events`)
+			console.log(`#${k} - ${(k + limit - start)}/${count} - ${ Math.round((k + limit - start) * 10000 / count )/100 }% ${events.length} events`)
 			for (let i of events) {
 				if (!i.removed && i.args && i.args.length===3 && !!i.args[2]._hex) {
 					const from = i.args[0]
