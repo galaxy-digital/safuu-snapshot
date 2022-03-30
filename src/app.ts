@@ -82,7 +82,7 @@ const checkBalances = async () => {
 				"type": "function"
 			}
 		]);
-		const pageLimit = 100
+		const pageLimit = 2000
 		const count = addrs.length
 		for (let k = 0; k < count; k += pageLimit) {
 			let iEnd = k + pageLimit
