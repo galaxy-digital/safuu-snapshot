@@ -1,4 +1,3 @@
-require("dotenv").config()
 import * as fs from 'fs'
 import * as ethers from 'ethers'
 import * as abi from './abi.json'
