@@ -3,10 +3,12 @@ import * as ethers from 'ethers'
 import * as abi from './abi.json'
 import { Contract, Provider, setMulticallAddress } from 'ethers-multicall'
 
-(async () => {
+
+const rpcKey = 'https://bsc-dataseed.binance.org/'
+const contractAddress = "0xe5ba47fd94cb645ba4119222e34fb33f59c7cd90"
+
+const checkHolders = async () => {
 	try {
-		const rpcKey = 'https://bsc-dataseed.binance.org/'
-		const contractAddress = "0xe5ba47fd94cb645ba4119222e34fb33f59c7cd90"
 		// const nullAddress = "0x0000000000000000000000000000000000000000"
 		// const url = "https://api.bscscan.com/api?module=account&action=txlist&address=" + contractAddress + "&startblock=0&endblock=99999999&page=1&offset=10&sort=asc&apikey=" + apiKey
 		// console.log(url)
@@ -16,10 +18,9 @@ import { Contract, Provider, setMulticallAddress } from 'ethers-multicall'
 		let count = last - start
 		const provider = new ethers.providers.JsonRpcProvider(rpcKey)
 		const contract = new ethers.Contract(contractAddress, abi, provider)
-		const decimals = await contract.decimals()
 		const eventFilter = contract.filters.Transfer()
 
-		const all = {} as {[key:string]:string}
+		const all = {} as {[key:string]:boolean}
 
 		const limit = 5000
 		for (let k = start; k < last; k+=limit) {
@@ -27,8 +28,11 @@ import { Contract, Provider, setMulticallAddress } from 'ethers-multicall'
 			let events = await contract.queryFilter(eventFilter, k, k + limit)
 			console.log(`#${k} - ${(k + limit - start)}/${count} - ${ Math.round((k + limit - start) * 10000 / count )/100 }% ${events.length} events`)
 			for (let i of events) {
+				
 				if (!i.removed && i.args && i.args.length===3 && !!i.args[2]._hex) {
-					const from = i.args[0]
+					const to = i.args[1]
+					all[to] = true
+					/* const from = i.args[0]
 					const to = i.args[1]
 					const value = ethers.BigNumber.from(i.args[2]._hex)
 					
@@ -41,20 +45,24 @@ import { Contract, Provider, setMulticallAddress } from 'ethers-multicall'
 					} else {
 						const toValue =  ethers.BigNumber.from(all[to])
 						all[to] = toValue.add(value).toHexString()
-					}
+					} */
 				}
 			}
 		}
-		/* const lists = [] as string[]
-		for (let k in holders) {
-			const v = Number(ethers.utils.formatUnits( ethers.BigNumber.from(holders[k]),  decimals))
-			if (v!==0) lists.push(k + ',' + v)
-		}
-		// fs.appendFileSync(__dirname + '/../response.json', JSON.stringify(events, null, '\t'))
-		fs.writeFileSync( __dirname + '/../april.csv', lists.join('\r\n') ) */
+		fs.writeFileSync( __dirname + '/../holders.csv', Object.keys(all).join('\r\n') )
+		console.log(`Completed!!!`)
+	} catch (error) {
+		console.error(error)
+	}
+}
+const checkBalances = async () => {
+	try {
+		const addrs = fs.readFileSync(__dirname + '/../holders.csv').toString().split('\r\n')
 		const holders = {} as {[key:string]:number}
-		const addrs = Object.keys(all)
-			// setMulticallAddress(multicallAddress)
+		const provider = new ethers.providers.JsonRpcProvider(rpcKey)
+		const contract = new ethers.Contract(contractAddress, abi, provider)
+		const decimals = await contract.decimals()
+
 		const callProvider = new Provider(provider)
 		await callProvider.init()
 		const tokenContract = new Contract(contractAddress, [
@@ -75,9 +83,10 @@ import { Contract, Provider, setMulticallAddress } from 'ethers-multicall'
 			}
 		]);
 		const pageLimit = 100
-		for (let k = 0; k < addrs.length; k += pageLimit) {
+		const count = addrs.length
+		for (let k = 0; k < count; k += pageLimit) {
 			let iEnd = k + pageLimit
-			if (iEnd >= addrs.length - 1) iEnd = addrs.length - 1
+			if (iEnd >= count - 1) iEnd = count - 1
 			const as = addrs.slice(k, iEnd)
 			const params = [] as any[]
 			for (let m = k; m < iEnd; m++) {
@@ -90,10 +99,16 @@ import { Contract, Provider, setMulticallAddress } from 'ethers-multicall'
 					if (v!==0) holders[as[m]] = v
 				}
 			}
+			console.log(`#${k} - ${k + pageLimit}/${count} - ${ Math.round((k + pageLimit) * 10000 / count )/100 }`)
 		}
-		fs.writeFileSync( __dirname + '/../holders.csv', Object.keys(holders).map(k=>(k + ',' + holders[k])).join('\r\n'))
+		fs.writeFileSync( __dirname + '/../holder-balances.csv', Object.keys(holders).map(k=>(k + ',' + holders[k])).join('\r\n'))
 		console.log(`Completed!!!`)
 	} catch (error) {
 		console.error(error)
 	}
+}
+
+(async () => {
+	// await checkHolders()
+	await checkBalances()
 })()
