@@ -90,7 +90,7 @@ const checkBalances = async () => {
 			const as = addrs.slice(k, iEnd)
 			const params = [] as any[]
 			for (let m = k; m < iEnd; m++) {
-				if (as[m].length===42) params.push( tokenContract.balanceOf(as[m]) )
+				if (as[m-k].length===42) params.push( tokenContract.balanceOf(as[m-k]) )
 			}
 			if (params.length) {
 				const response = await callProvider.all(params);
@@ -101,7 +101,7 @@ const checkBalances = async () => {
 					}
 				}
 			}
-			console.log(`#${k} - ${k + pageLimit}/${count} - ${ Math.round((k + pageLimit) * 10000 / count )/100 }`)
+			console.log(`#${k} - ${ Math.round((k + pageLimit) * 10000 / count )/100 }%`)
 		}
 		fs.writeFileSync( __dirname + '/../holder-balances.csv', Object.keys(holders).map(k=>(k + ',' + holders[k])).join('\r\n'))
 		console.log(`Completed!!!`)
