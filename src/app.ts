@@ -90,13 +90,15 @@ const checkBalances = async () => {
 			const as = addrs.slice(k, iEnd)
 			const params = [] as any[]
 			for (let m = k; m < iEnd; m++) {
-				params.push( tokenContract.balanceOf(as[m]) )
+				if (as[m].length===42) params.push( tokenContract.balanceOf(as[m]) )
 			}
-			const response = await callProvider.all(params);
-			if (response.length===params.length) {
-				for (let m = 0; m<response.length; m++) {
-					const v = Number(ethers.utils.formatUnits( ethers.BigNumber.from(response[m]), decimals))
-					if (v!==0) holders[as[m]] = v
+			if (params.length) {
+				const response = await callProvider.all(params);
+				if (response.length===params.length) {
+					for (let m = 0; m<response.length; m++) {
+						const v = Number(ethers.utils.formatUnits( ethers.BigNumber.from(response[m]), decimals))
+						if (v!==0) holders[as[m]] = v
+					}
 				}
 			}
 			console.log(`#${k} - ${k + pageLimit}/${count} - ${ Math.round((k + pageLimit) * 10000 / count )/100 }`)
