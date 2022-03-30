@@ -5,11 +5,11 @@ import * as abi from './abi.json'
 (async () => {
 	const rpcKey = 'https://bsc-dataseed.binance.org/'
 	const contractAddress = "0xe5ba47fd94cb645ba4119222e34fb33f59c7cd90"
-	const nullAddress = "0x0000000000000000000000000000000000000000"
+	// const nullAddress = "0x0000000000000000000000000000000000000000"
 	// const url = "https://api.bscscan.com/api?module=account&action=txlist&address=" + contractAddress + "&startblock=0&endblock=99999999&page=1&offset=10&sort=asc&apikey=" + apiKey
 	// console.log(url)
 	let start = 15372122
-	let last = start+1e4 // 16502296
+	let last = 16502296
 	let count = last - start
 	const provider = new ethers.providers.JsonRpcProvider(rpcKey)
 	const contract = new ethers.Contract(contractAddress, abi, provider)
